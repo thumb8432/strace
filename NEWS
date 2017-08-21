@@ -1,6 +1,10 @@
 Noteworthy changes in release ?.?? (????-??-??)
 ===============================================
 
+* Changes in command line syntax
+  * New syntax for -e option for filter-based expressions.
+    Traditional syntax is also supported.
+
 * Improvements
   * Implemented libdw backend for -k option, configured at build time
     using --with-libdw option.
