@@ -281,7 +281,7 @@ decode_nla_ifindex(struct tcb *const tcp,
 bool
 decode_nla_xval(struct tcb *const tcp,
 		const kernel_ulong_t addr,
-		const unsigned int len,
+		unsigned int len,
 		const void *const opaque_data)
 {
 	const struct decode_nla_xlat_opts * const opts = opaque_data;
@@ -289,11 +289,15 @@ decode_nla_xval(struct tcb *const tcp,
 		uint64_t val;
 		uint8_t  bytes[sizeof(uint64_t)];
 	} data;
+
+	if (opts->size)
+		len = MIN(len, opts->size);
+
 	const size_t bytes_offs = is_bigendian ? sizeof(data) - len : 0;
 
 	data.val = 0;
 
-	if (len > sizeof(data))
+	if (len > sizeof(data) || (opts->size && (len < opts->size)))
 		return false;
 	else if (!umoven_or_printaddr(tcp, addr, len, data.bytes + bytes_offs))
 	{
@@ -346,6 +350,7 @@ decode_nla_ip_proto(struct tcb *const tcp,
 		.xlat_size = inet_protocols_size,
 		.xt = XT_SORTED,
 		.dflt = "IPPROTO_???",
+		.size = 1,
 	};
 
 	return decode_nla_xval(tcp, addr, len, &opts);
@@ -354,7 +359,7 @@ decode_nla_ip_proto(struct tcb *const tcp,
 bool
 decode_nla_flags(struct tcb *const tcp,
 		 const kernel_ulong_t addr,
-		 const unsigned int len,
+		 unsigned int len,
 		 const void *const opaque_data)
 {
 	const struct decode_nla_xlat_opts * const opts = opaque_data;
@@ -362,6 +367,10 @@ decode_nla_flags(struct tcb *const tcp,
 		uint64_t flags;
 		uint8_t  bytes[sizeof(uint64_t)];
 	} data;
+
+	if (opts->size)
+		len = MIN(len, opts->size);
+
 	const size_t bytes_offs = is_bigendian ? sizeof(data) - len : 0;
 
 	if (opts->xt == XT_INDEXED)
@@ -370,7 +379,7 @@ decode_nla_flags(struct tcb *const tcp,
 
 	data.flags = 0;
 
-	if (len > sizeof(data))
+	if (len > sizeof(data) || (opts->size && (len < opts->size)))
 		return false;
 	else if (!umoven_or_printaddr(tcp, addr, len, data.bytes + bytes_offs))
 	{
