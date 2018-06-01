@@ -1,6 +1,23 @@
 Noteworthy changes in release ?.?? (????-??-??)
 ===============================================
 
+* Changes in behaviour
+  * On x32 personality, 64-bit syscalls (such as readv) are now shown with "#64"
+    suffix instead of "64:" prefix. This also now allows their specification in
+    syscall qualification expressions.
+  * Changed error number output format; now, error numbers are consistently
+    printed as
+
+        ... = -1 ECONST (Error description)
+
+    for known errors and as
+
+        ... = -1 (errno 123)
+
+    for unknown errors, regardless of -e raw qualification setting.  Use -X raw
+    for displaying of the raw errno at all times.
+  * Unfetchable addresses inside arrays are now printed as comments.
+
 * Improvements
   * Implemented libdw backend for -k option, configured at build time
     using --with-libdw option.
@@ -8,7 +25,28 @@ Noteworthy changes in release ?.?? (????-??-??)
     using --enable-stacktrace option.
   * Added -X option for configuring xlat output formatting (addresses
     Debian bug #692915).
+  * Improved support for reproducible builds (addresses Debian bug #896016).
   * Updated lists of ioctl commands from Linux 4.17.
+  * Implemented decoding of BPF_PROG_QUERY and BPF_RAW_TRACEPOINT_OPEN bpf
+    syscall commands.
+  * Enhanced decoding of bpf, getsockopt, setsockopt, and socket syscalls.
+  * Enhanced NETLINK_KOBJECT_UEVENT, NETLINK_ROUTE protocol decoding.
+  * Enhanced *_DIAG_MEMINFO netlink attribute decoding.
+  * Implemented INOTIFY_IOC_SETNEXTWD and PERF_EVENT_IOC_* ioctl command
+    decoding.
+  * Implemented decoding of PR_GET_SPECULATION_CTRL and PR_SET_SPECULATION_CTRL
+    prctl syscall options.
+  * Enhanced decoding of BTRFS_*, FS_IOC_*, SIOCGIFHWADDR, and SIOCSIFHWADDR
+    ioctl commands.
+  * Updated lists of ADJ_*, BPF_*, BPF_F_*, BPF_PROG_TYPE_*, ETH_P_*, FPE_*,
+    IFF_*, IPPROTO_*, MAP_*, MS_*, MSG_*, NETLINK_*, PACKET_*, PROT_*, SCTP_*,
+    SECCOMP_FILTER_FLAG_*, SEGV_*, SEM_*, SHM_*, SW_*, V4L2_CID_*,
+    V4L2_CTRL_CLASS_*, and V4L2_PIX_FMT_* constants.
+  * Enhanced decoding of AF_BLUETOOTH socket addresses.
+
+* Bug fixes
+  * Fixed decoding of msgtyp argument of msgrcv syscall.
+  * Fixed fallback definitions for F_*, MCL_*, MSG_ZEROCOPY, SI_*, and SOL_SOCKET.
 
 Noteworthy changes in release 4.22 (2018-04-05)
 ===============================================
