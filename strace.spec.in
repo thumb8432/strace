@@ -2,7 +2,11 @@ Summary: Tracks and displays system calls associated with a running process
 Name: strace
 Version: @PACKAGE_VERSION@
 Release: 1%{?dist}
+%if 0%{?suse_version}
+License: BSD-3-Clause
+%else
 License: BSD
+%endif
 Group: Development/Debuggers
 URL: https://strace.io
 %if 0%{?fedora} >= 12 || 0%{?centos} >= 6 || 0%{?rhel} >= 6 || 0%{?suse_version} >= 1200
