@@ -943,6 +943,16 @@ syscall_exiting_trace(struct tcb *tcp, struct timespec *ts, int res)
 void
 syscall_exiting_finish(struct tcb *tcp)
 {
+	int i;
+
+	fprintf(stderr, "%x ", tcp->scno);
+	for(i=0;i<MAX_ARGS;i++)
+	{
+		fprintf(stderr, "%x ", tcp->u_arg[i]);
+	}
+	fprintf(stderr, "%x ", tcp->u_rval);
+	fprintf(stderr, "\n");
+
 	tcp->flags &= ~(TCB_INSYSCALL | TCB_TAMPERED | TCB_INJECT_DELAY_EXIT);
 	tcp->sys_func_rval = 0;
 	free_tcb_priv_data(tcp);
