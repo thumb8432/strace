@@ -944,15 +944,37 @@ syscall_exiting_trace(struct tcb *tcp, struct timespec *ts, int res)
 void
 syscall_exiting_finish(struct tcb *tcp)
 {
-	int i;
 	FILE *logfile;
+	uint8_t deref_buf[MAX_DEREF_SIZE];
+	struct iovec local[1];
+	struct iovec remote[1];
+	int i, j;
 
 	logfile = fopen(LOG_FNAME, "a");
 
 	fprintf(logfile, "%x ", tcp->scno);
 	for(i=0;i<MAX_ARGS;i++)
 	{
-		fprintf(logfile, "%x ", tcp->u_arg[i]);
+		fprintf(logfile, "%x", tcp->u_arg[i]);
+
+		if(deref_size[tcp->scno][i] > 0)
+		{
+			local[0].iov_base = deref_buf;
+			local[0].iov_len = deref_size[tcp->scno][i];
+			remote[0].iov_base = (void *)tcp->u_arg[i];
+			remote[0].iov_len = deref_size[tcp->scno][i];
+
+			process_vm_readv(tcp->pid, local, 1, remote, 1, 0);
+
+			fprintf(logfile, "(");
+			for(j=0;j<deref_size[tcp->scno][i];j++)
+			{
+				fprintf(logfile, "%02x", deref_buf[j]);
+			}
+			fprintf(logfile, ")");
+		}
+
+		fprintf(logfile, " ");
 	}
 	fprintf(logfile, "%x ", tcp->u_rval);
 	fprintf(logfile, "\n");
