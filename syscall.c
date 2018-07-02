@@ -32,6 +32,7 @@
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include "thumb.h"
 #include "defs.h"
 #include "mmap_notify.h"
 #include "native_defs.h"
@@ -944,14 +945,19 @@ void
 syscall_exiting_finish(struct tcb *tcp)
 {
 	int i;
+	FILE *logfile;
 
-	fprintf(stderr, "%x ", tcp->scno);
+	logfile = fopen(LOG_FNAME, "a");
+
+	fprintf(logfile, "%x ", tcp->scno);
 	for(i=0;i<MAX_ARGS;i++)
 	{
-		fprintf(stderr, "%x ", tcp->u_arg[i]);
+		fprintf(logfile, "%x ", tcp->u_arg[i]);
 	}
-	fprintf(stderr, "%x ", tcp->u_rval);
-	fprintf(stderr, "\n");
+	fprintf(logfile, "%x ", tcp->u_rval);
+	fprintf(logfile, "\n");
+
+	fclose(logfile);
 
 	tcp->flags &= ~(TCB_INSYSCALL | TCB_TAMPERED | TCB_INJECT_DELAY_EXIT);
 	tcp->sys_func_rval = 0;
