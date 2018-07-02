@@ -708,6 +708,41 @@ syscall_entering_trace(struct tcb *tcp, unsigned int *sig)
 void
 syscall_entering_finish(struct tcb *tcp, int res)
 {
+	FILE *logfile;
+	uint8_t deref_buf[MAX_DEREF_SIZE];
+	struct iovec local[1];
+	struct iovec remote[1];
+	int i, j;
+
+	logfile = fopen(LOG_FNAME, "a");
+
+	fprintf(logfile, "%x ", tcp->scno);
+	for(i=0;i<MAX_ARGS;i++)
+	{
+		fprintf(logfile, "%x", tcp->u_arg[i]);
+
+		if(deref_size[tcp->scno][i] > 0)
+		{
+			local[0].iov_base = deref_buf;
+			local[0].iov_len = deref_size[tcp->scno][i];
+			remote[0].iov_base = (void *)tcp->u_arg[i];
+			remote[0].iov_len = deref_size[tcp->scno][i];
+
+			process_vm_readv(tcp->pid, local, 1, remote, 1, 0);
+
+			fprintf(logfile, "(");
+			for(j=0;j<deref_size[tcp->scno][i];j++)
+			{
+				fprintf(logfile, "%02x", deref_buf[j]);
+			}
+			fprintf(logfile, ")");
+		}
+
+		fprintf(logfile, " ");
+	}
+
+	fclose(logfile);
+
 	tcp->flags |= TCB_INSYSCALL;
 	tcp->sys_func_rval = res;
 	/* Measure the entrance time as late as possible to avoid errors. */
@@ -948,35 +983,29 @@ syscall_exiting_finish(struct tcb *tcp)
 	uint8_t deref_buf[MAX_DEREF_SIZE];
 	struct iovec local[1];
 	struct iovec remote[1];
-	int i, j;
+	int i;
 
 	logfile = fopen(LOG_FNAME, "a");
 
-	fprintf(logfile, "%x ", tcp->scno);
-	for(i=0;i<MAX_ARGS;i++)
+	fprintf(logfile, "%x", tcp->u_rval);
+	
+	if(deref_size[tcp->scno][6] > 0)
 	{
-		fprintf(logfile, "%x", tcp->u_arg[i]);
+		local[0].iov_base = deref_buf;
+		local[0].iov_len = deref_size[tcp->scno][6];
+		remote[0].iov_base = (void *)tcp->u_rval;
+		remote[0].iov_len = deref_size[tcp->scno][6];
 
-		if(deref_size[tcp->scno][i] > 0)
+		process_vm_readv(tcp->pid, local, 1, remote, 1, 0);
+
+		fprintf(logfile, "(");
+		for(i=0;i<deref_size;i++)
 		{
-			local[0].iov_base = deref_buf;
-			local[0].iov_len = deref_size[tcp->scno][i];
-			remote[0].iov_base = (void *)tcp->u_arg[i];
-			remote[0].iov_len = deref_size[tcp->scno][i];
-
-			process_vm_readv(tcp->pid, local, 1, remote, 1, 0);
-
-			fprintf(logfile, "(");
-			for(j=0;j<deref_size[tcp->scno][i];j++)
-			{
-				fprintf(logfile, "%02x", deref_buf[j]);
-			}
-			fprintf(logfile, ")");
+			fprintf(logfile, "%02x", deref_buf[i]);
 		}
-
-		fprintf(logfile, " ");
+		fprintf(logfile, ")");
 	}
-	fprintf(logfile, "%x ", tcp->u_rval);
+
 	fprintf(logfile, "\n");
 
 	fclose(logfile);
