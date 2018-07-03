@@ -740,7 +740,7 @@ syscall_entering_finish(struct tcb *tcp, int res)
 
 		fprintf(logfile, " ");
 	}
-
+	fprintf(logfile, "\n");
 	fclose(logfile);
 
 	tcp->flags |= TCB_INSYSCALL;
@@ -980,33 +980,10 @@ void
 syscall_exiting_finish(struct tcb *tcp)
 {
 	FILE *logfile;
-	uint8_t deref_buf[MAX_DEREF_SIZE];
-	struct iovec local[1];
-	struct iovec remote[1];
-	int i;
 
 	logfile = fopen(LOG_FNAME, "a");
 
-	fprintf(logfile, "%x", tcp->u_rval);
-	
-	if(deref_size[tcp->scno][6] > 0)
-	{
-		local[0].iov_base = deref_buf;
-		local[0].iov_len = deref_size[tcp->scno][6];
-		remote[0].iov_base = (void *)tcp->u_rval;
-		remote[0].iov_len = deref_size[tcp->scno][6];
-
-		process_vm_readv(tcp->pid, local, 1, remote, 1, 0);
-
-		fprintf(logfile, "(");
-		for(i=0;i<deref_size;i++)
-		{
-			fprintf(logfile, "%02x", deref_buf[i]);
-		}
-		fprintf(logfile, ")");
-	}
-
-	fprintf(logfile, "\n");
+	fprintf(logfile, "%x\n", tcp->u_rval);
 
 	fclose(logfile);
 
